@@ -43,7 +43,7 @@ fi
 
 # Update Paket
 echo -e "${GREEN}${PROGRES[1]}${NC}"
-sudo apt update -y
+sudo apt update -y > /dev/null 2>&1
 
 # Konfigurasi Netplan
 echo -e "${GREEN}${PROGRES[2]}${NC}"
@@ -63,15 +63,15 @@ network:
       addresses:
         - 192.168.20.1/24
 EOT
-sudo netplan apply
+sudo netplan apply > /dev/null 2>&1
 
 # Instalasi ISC DHCP Server
 echo -e "${GREEN}${PROGRES[3]}${NC}"
-sudo apt install -y isc-dhcp-server
+sudo apt install -y isc-dhcp-server > /dev/null 2>&1
 
 # Konfigurasi DHCP Server
 echo -e "${GREEN}${PROGRES[4]}${NC}"
-sudo bash -c 'cat > /etc/dhcp/dhcpd.conf' << EOF
+sudo bash -c 'cat > /etc/dhcp/dhcpd.conf' << EOF > /dev/null
 subnet 192.168.20.0 netmask 255.255.255.0 {
   range 192.168.20.2 192.168.20.254;
   option domain-name-servers 8.8.8.8;
@@ -88,31 +88,31 @@ subnet 192.168.20.0 netmask 255.255.255.0 {
 }
 EOF
 echo 'INTERFACESv4="eth1.10"' | sudo tee /etc/default/isc-dhcp-server > /dev/null
-sudo systemctl restart isc-dhcp-server
+sudo systemctl restart isc-dhcp-server > /dev/null 2>&1
 
 # Aktifkan IP Forwarding
 echo -e "${GREEN}${PROGRES[5]}${NC}"
 sudo sed -i '/^#net.ipv4.ip_forward=1/s/^#//' /etc/sysctl.conf
-sudo sysctl -p
+sudo sysctl -p > /dev/null 2>&1
 
 # Konfigurasi Masquerade dengan iptables
 echo -e "${GREEN}${PROGRES[6]}${NC}"
-sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE > /dev/null 2>&1
 
 # Instalasi iptables-persistent dengan otomatisasi
 echo -e "${GREEN}${PROGRES[7]}${NC}"
-echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
-echo iptables-persistent iptables-persistent/autosave_v6 boolean false | sudo debconf-set-selections
-sudo apt install -y iptables-persistent
+echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections > /dev/null 2>&1
+echo iptables-persistent iptables-persistent/autosave_v6 boolean false | sudo debconf-set-selections > /dev/null 2>&1
+sudo apt install -y iptables-persistent > /dev/null 2>&1
 
 # Menyimpan Konfigurasi iptables
 echo -e "${GREEN}${PROGRES[8]}${NC}"
-sudo sh -c "iptables-save > /etc/iptables/rules.v4"
-sudo sh -c "ip6tables-save > /etc/iptables/rules.v6"
+sudo sh -c "iptables-save > /etc/iptables/rules.v4" > /dev/null 2>&1
+sudo sh -c "ip6tables-save > /etc/iptables/rules.v6" > /dev/null 2>&1
 
 # Membuat file rc.local untuk menjalankan iptables NAT secara otomatis
 echo -e "${GREEN}${PROGRES[9]}${NC}"
-sudo bash -c 'cat > /etc/rc.local' << 'RCLOCAL'
+sudo bash -c 'cat > /etc/rc.local' << 'RCLOCAL' > /dev/null
 #!/bin/bash
 # Aktifkan aturan iptables NAT
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
@@ -120,11 +120,11 @@ exit 0
 RCLOCAL
 
 # Memberikan izin eksekusi pada rc.local
-sudo chmod +x /etc/rc.local
+sudo chmod +x /etc/rc.local > /dev/null 2>&1
 
 # Pastikan rc.local service aktif
 if ! systemctl is-active --quiet rc-local; then
-    sudo bash -c 'cat > /etc/systemd/system/rc-local.service' << 'SERVICE'
+    sudo bash -c 'cat > /etc/systemd/system/rc-local.service' << 'SERVICE' > /dev/null
 [Unit]
 Description=/etc/rc.local Compatibility
 ConditionPathExists=/etc/rc.local
@@ -140,13 +140,13 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 SERVICE
 
-    sudo systemctl enable rc-local
-    sudo systemctl start rc-local
+    sudo systemctl enable rc-local > /dev/null 2>&1
+    sudo systemctl start rc-local > /dev/null 2>&1
 fi
 
 # Instalasi Expect
 echo -e "${GREEN}${PROGRES[10]}${NC}"
-sudo apt install -y expect
+sudo apt install -y expect > /dev/null 2>&1
 
 # Konfigurasi Cisco
 echo -e "${GREEN}${PROGRES[11]}${NC}"
@@ -156,7 +156,7 @@ CISCO_PORT="30013"
 # Pastikan `expect` terinstal
 command -v expect > /dev/null || error_message "Expect tidak terpasang. Instal dengan: sudo apt install expect"
 
-expect <<EOF
+expect <<EOF > /dev/null 2>&1
 spawn telnet $CISCO_IP $CISCO_PORT
 set timeout 20
 # Masuk ke perangkat dan mode konfigurasi
