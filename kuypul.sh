@@ -16,17 +16,10 @@ PROGRES=("Menambahkan Repository Ban" "Melakukan update paket" "Mengonfigurasi n
          "Mengonfigurasi DHCP server" "Mengaktifkan IP Forwarding" "Mengonfigurasi Masquerade" \
          "Menginstal iptables-persistent" "Menyimpan konfigurasi iptables" "Menginstal Expect" \
          "Menyiapkan rc.local untuk iptables NAT" "Konfigurasi Cisco")
-STEP=0
 
 # Warna untuk output
 GREEN='\033[1;32m'
 NC='\033[0m'
-
-# Fungsi untuk menampilkan progres
-function show_progress {
-    STEP=$((STEP + 1))
-    echo -e "${GREEN}Progres [$STEP/${#PROGRES[@]}]: ${PROGRES[STEP-1]}${NC}"
-}
 
 # Fungsi untuk pesan sukses dan gagal
 success_message() { echo -e "${GREEN}$1 berhasil!${NC}"; }
@@ -36,7 +29,7 @@ error_message() { echo -e "\033[1;31m$1 gagal!${NC}"; exit 1; }
 echo "Otomasi Dimulai"
 
 # Menambahkan Repository Ban
-show_progress
+echo -e "${GREEN}${PROGRES[0]}${NC}"
 REPO="http://kartolo.sby.datautama.net.id/ubuntu/"
 if ! grep -q "$REPO" /etc/apt/sources.list; then
     cat <<EOF | sudo tee /etc/apt/sources.list > /dev/null
@@ -49,11 +42,11 @@ EOF
 fi
 
 # Update Paket
-show_progress
+echo -e "${GREEN}${PROGRES[1]}${NC}"
 sudo apt update -y
 
 # Konfigurasi Netplan
-show_progress
+echo -e "${GREEN}${PROGRES[2]}${NC}"
 cat <<EOT | sudo tee /etc/netplan/01-netcfg.yaml > /dev/null
 network:
   version: 2
@@ -73,11 +66,11 @@ EOT
 sudo netplan apply
 
 # Instalasi ISC DHCP Server
-show_progress
+echo -e "${GREEN}${PROGRES[3]}${NC}"
 sudo apt install -y isc-dhcp-server
 
 # Konfigurasi DHCP Server
-show_progress
+echo -e "${GREEN}${PROGRES[4]}${NC}"
 sudo bash -c 'cat > /etc/dhcp/dhcpd.conf' << EOF
 subnet 192.168.20.0 netmask 255.255.255.0 {
   range 192.168.20.2 192.168.20.254;
@@ -98,27 +91,27 @@ echo 'INTERFACESv4="eth1.10"' | sudo tee /etc/default/isc-dhcp-server > /dev/nul
 sudo systemctl restart isc-dhcp-server
 
 # Aktifkan IP Forwarding
-show_progress
+echo -e "${GREEN}${PROGRES[5]}${NC}"
 sudo sed -i '/^#net.ipv4.ip_forward=1/s/^#//' /etc/sysctl.conf
 sudo sysctl -p
 
 # Konfigurasi Masquerade dengan iptables
-show_progress
+echo -e "${GREEN}${PROGRES[6]}${NC}"
 sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 # Instalasi iptables-persistent dengan otomatisasi
-show_progress
+echo -e "${GREEN}${PROGRES[7]}${NC}"
 echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
 echo iptables-persistent iptables-persistent/autosave_v6 boolean false | sudo debconf-set-selections
 sudo apt install -y iptables-persistent
 
 # Menyimpan Konfigurasi iptables
-show_progress
+echo -e "${GREEN}${PROGRES[8]}${NC}"
 sudo sh -c "iptables-save > /etc/iptables/rules.v4"
 sudo sh -c "ip6tables-save > /etc/iptables/rules.v6"
 
 # Membuat file rc.local untuk menjalankan iptables NAT secara otomatis
-show_progress
+echo -e "${GREEN}${PROGRES[9]}${NC}"
 sudo bash -c 'cat > /etc/rc.local' << 'RCLOCAL'
 #!/bin/bash
 # Aktifkan aturan iptables NAT
@@ -152,10 +145,11 @@ SERVICE
 fi
 
 # Instalasi Expect
-show_progress
+echo -e "${GREEN}${PROGRES[10]}${NC}"
 sudo apt install -y expect
 
 # Konfigurasi Cisco
+echo -e "${GREEN}${PROGRES[11]}${NC}"
 CISCO_IP="192.168.234.132"
 CISCO_PORT="30013"
 
