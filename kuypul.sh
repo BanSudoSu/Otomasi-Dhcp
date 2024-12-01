@@ -148,8 +148,7 @@ fi
 echo -e "${GREEN}${PROGRES[9]}${NC}"
 if ! command -v expect > /dev/null; then
     echo "Menginstal Expect..."
-    sudo apt-get update -y > /dev/null 2>&1
-    sudo apt-get install -y expect > /dev/null 2>&1
+    sudo apt install expect -y
     if [ $? -eq 0 ]; then
         success_message "Instalasi Expect"
     else
