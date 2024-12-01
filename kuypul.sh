@@ -14,8 +14,8 @@ echo "=======================================\033[0m"
 # Variabel untuk progres
 PROGRES=("Menambahkan Repository Ban" "Melakukan update paket" "Mengonfigurasi netplan" "Menginstal DHCP server" \
          "Mengonfigurasi DHCP server" "Mengaktifkan IP Forwarding" "Mengonfigurasi Masquerade" \
-         "Menginstal iptables-persistent" "Menyimpan konfigurasi iptables" "Menginstal Expect" \
-         "Menyiapkan rc.local untuk iptables NAT" "Konfigurasi Cisco")
+         "Menginstal iptables-persistent" "Menyimpan konfigurasi iptables"  \
+         "Menyiapkan rc.local untuk iptables NAT" "Menginstal Expect" "Konfigurasi Cisco")
 
 # Warna untuk output
 GREEN='\033[1;32m'
