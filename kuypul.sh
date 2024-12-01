@@ -15,7 +15,7 @@ echo "=======================================\033[0m"
 PROGRES=("Menambahkan Repository Ban" "Melakukan update paket" "Mengonfigurasi netplan" "Menginstal DHCP server" \
          "Mengonfigurasi DHCP server" "Mengaktifkan IP Forwarding" "Mengonfigurasi Masquerade" \
          "Menginstal iptables-persistent" "Menyimpan konfigurasi iptables"  \
-         "Menyiapkan rc.local untuk iptables NAT" "Menginstal Expect" "Konfigurasi Cisco")
+         "Membuat iptables NAT Service" "Menginstal Expect" "Konfigurasi Cisco")
 
 # Warna untuk output
 GREEN='\033[1;32m'
@@ -95,7 +95,7 @@ echo -e "${GREEN}${PROGRES[5]}${NC}"
 sudo sed -i '/^#net.ipv4.ip_forward=1/s/^#//' /etc/sysctl.conf
 sudo sysctl -p > /dev/null 2>&1
 
- # Konfigurasi Masquerade dengan iptables
+# Konfigurasi Masquerade dengan iptables
 echo -e "${GREEN}${PROGRES[6]}${NC}"
 sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE > /dev/null 2>&1
 
@@ -110,43 +110,24 @@ echo -e "${GREEN}${PROGRES[8]}${NC}"
 sudo sh -c "iptables-save > /etc/iptables/rules.v4" > /dev/null 2>&1
 sudo sh -c "ip6tables-save > /etc/iptables/rules.v6" > /dev/null 2>&1
 
-# Membuat file rc.local untuk menjalankan iptables NAT secara otomatis
+# Membuat iptables NAT Service
 echo -e "${GREEN}${PROGRES[9]}${NC}"
-sudo bash -c 'cat > /etc/rc.local' << 'RCLOCAL' > /dev/null
-#!/bin/bash
-iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-exit 0
-RCLOCAL
-sudo chmod +x /etc/rc.local > /dev/null 2>&1
-
-if ! systemctl is-active --quiet rc-local; then
-    sudo bash -c 'cat > /etc/systemd/system/rc-local.service' << 'SERVICE' > /dev/null
+sudo bash -c 'cat > /etc/systemd/system/iptables-nat.service' << 'EOF'
 [Unit]
-Description=/etc/rc.local Compatibility
-ConditionPathExists=/etc/rc.local
+Description=Setup iptables NAT
+After=network.target
 
 [Service]
-Type=forking
-ExecStart=/etc/rc.local
-TimeoutSec=0
-StandardInput=tty
+Type=oneshot
+ExecStart=/sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target
-SERVICE
-
-    sudo systemctl enable rc-local > /dev/null 2>&1
-    sudo systemctl start rc-local > /dev/null 2>&1
-fi
-
-# Cek apakah rc.local sudah berjalan
-echo -e "${GREEN}Memeriksa status rc.local...${NC}"
-if systemctl is-active --quiet rc-local; then
-    success_message "rc.local sudah berjalan"
-else
-    error_message "rc.local tidak berjalan"
-fi
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable iptables-nat
+sudo systemctl start iptables-nat
 
 # Instalasi Expect
 echo -e "${GREEN}${PROGRES[10]}${NC}"
