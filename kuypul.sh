@@ -8,7 +8,7 @@ echo " | |_) | __ _ _ __  "
 echo " |  _ < / _\` | '_ \ "
 echo " | |_) | (_| | | | |"
 echo " |____/ \__,_|_| |_|"
-echo "         Ban        "
+echo "                    "
 echo "=======================================\033[0m"
 
 # Variabel untuk progres
@@ -145,8 +145,19 @@ SERVICE
 fi
 
 # Instalasi Expect
-echo -e "${GREEN}${PROGRES[10]}${NC}"
-sudo apt install -y expect > /dev/null 2>&1
+echo -e "${GREEN}${PROGRES[9]}${NC}"
+if ! command -v expect > /dev/null; then
+    echo "Menginstal Expect..."
+    sudo apt-get update -y > /dev/null 2>&1
+    sudo apt-get install -y expect > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        success_message "Instalasi Expect"
+    else
+        error_message "Instalasi Expect Gagal"
+    fi
+else
+    success_message "Expect sudah terinstal"
+fi
 
 # Konfigurasi Cisco
 echo -e "${GREEN}${PROGRES[11]}${NC}"
