@@ -82,7 +82,7 @@ subnet 192.168.20.0 netmask 255.255.255.0 {
   max-lease-time 7200;
 
   host Ban {
-    hardware ethernet 00:11:22:33:44:55;  # Ganti dengan MAC address perangkat
+    hardware ethernet 00:50:79:66:68:0f;  
     fixed-address 192.168.20.10;
   }
 }
