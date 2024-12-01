@@ -95,7 +95,7 @@ echo -e "${GREEN}${PROGRES[5]}${NC}"
 sudo sed -i '/^#net.ipv4.ip_forward=1/s/^#//' /etc/sysctl.conf
 sudo sysctl -p > /dev/null 2>&1
 
-# Konfigurasi Masquerade dengan iptables
+ # Konfigurasi Masquerade dengan iptables
 echo -e "${GREEN}${PROGRES[6]}${NC}"
 sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE > /dev/null 2>&1
 
@@ -114,15 +114,11 @@ sudo sh -c "ip6tables-save > /etc/iptables/rules.v6" > /dev/null 2>&1
 echo -e "${GREEN}${PROGRES[9]}${NC}"
 sudo bash -c 'cat > /etc/rc.local' << 'RCLOCAL' > /dev/null
 #!/bin/bash
-# Aktifkan aturan iptables NAT
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 exit 0
 RCLOCAL
-
-# Memberikan izin eksekusi pada rc.local
 sudo chmod +x /etc/rc.local > /dev/null 2>&1
 
-# Pastikan rc.local service aktif
 if ! systemctl is-active --quiet rc-local; then
     sudo bash -c 'cat > /etc/systemd/system/rc-local.service' << 'SERVICE' > /dev/null
 [Unit]
@@ -144,52 +140,42 @@ SERVICE
     sudo systemctl start rc-local > /dev/null 2>&1
 fi
 
-# Instalasi Expect
-echo -e "${GREEN}${PROGRES[9]}${NC}"
+# Cek apakah rc.local sudah berjalan
+echo -e "${GREEN}Memeriksa status rc.local...${NC}"
+if systemctl is-active --quiet rc-local; then
+    success_message "rc.local sudah berjalan"
+else
+    error_message "rc.local tidak berjalan"
+fi
 
+# Instalasi Expect
+echo -e "${GREEN}${PROGRES[10]}${NC}"
 if ! command -v expect > /dev/null; then
-    echo "Menginstal Expect..."
-    sudo apt install -y expect 
-    if [ $? -eq 0 ]; then
-        success_message "Instalasi Expect"
-    else
-        error_message "Instalasi Expect Gagal"
-    fi
+    sudo apt install -y expect > /dev/null 2>&1
+    [ $? -eq 0 ] && success_message "Instalasi Expect" || error_message "Instalasi Expect"
 else
     success_message "Expect sudah terinstal"
 fi
-
 
 # Konfigurasi Cisco
 echo -e "${GREEN}${PROGRES[11]}${NC}"
 CISCO_IP="192.168.234.132"
 CISCO_PORT="30013"
-
-# Pastikan `expect` terinstal
-command -v expect > /dev/null || error_message "Expect tidak terpasang. Instal dengan: sudo apt install expect"
-
 expect <<EOF > /dev/null 2>&1
 spawn telnet $CISCO_IP $CISCO_PORT
 set timeout 20
-# Masuk ke perangkat dan mode konfigurasi
 expect ">" { send "enable\r" }
 expect "#" { send "configure terminal\r" }
-
-# Konfigurasi interface e0/0: mode access dan VLAN 10
 expect "(config)#" { send "interface e0/0\r" }
 expect "(config-if)#" { send "switchport mode access\r" }
 expect "(config-if)#" { send "switchport access vlan 10\r" }
 expect "(config-if)#" { send "no shutdown\r" }
 expect "(config-if)#" { send "exit\r" }
-
-# Konfigurasi interface e0/1: mode trunk
 expect "(config)#" { send "interface e0/1\r" }
 expect "(config-if)#" { send "switchport mode trunk\r" }
 expect "(config-if)#" { send "switchport trunk encapsulation dot1q\r" }
 expect "(config-if)#" { send "no shutdown\r" }
 expect "(config-if)#" { send "exit\r" }
-
-# Keluar dari mode konfigurasi
 expect "(config)#" { send "exit\r" }
 expect "#" { send "exit\r" }
 expect eof
