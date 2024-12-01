@@ -146,9 +146,10 @@ fi
 
 # Instalasi Expect
 echo -e "${GREEN}${PROGRES[9]}${NC}"
+
 if ! command -v expect > /dev/null; then
     echo "Menginstal Expect..."
-    sudo apt install expect -y
+    sudo apt install -y expect 
     if [ $? -eq 0 ]; then
         success_message "Instalasi Expect"
     else
@@ -157,6 +158,7 @@ if ! command -v expect > /dev/null; then
 else
     success_message "Expect sudah terinstal"
 fi
+
 
 # Konfigurasi Cisco
 echo -e "${GREEN}${PROGRES[11]}${NC}"
