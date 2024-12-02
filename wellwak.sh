@@ -110,6 +110,27 @@ echo -e "${GREEN}${PROGRES[8]}${NC}"
 sudo sh -c "iptables-save > /etc/iptables/rules.v4" > /dev/null 2>&1
 sudo sh -c "ip6tables-save > /etc/iptables/rules.v6" > /dev/null 2>&1
 
+# Membuat iptables NAT Service
+echo -e "${GREEN}${PROGRES[9]}${NC}"
+sudo bash -c 'cat > /etc/systemd/system/iptables-nat.service' << EOF
+[Unit]
+Description=iptables NAT configuration service
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+ExecReload=/sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Mengaktifkan iptables-nat service
+sudo systemctl enable iptables-nat.service > /dev/null 2>&1
+sudo systemctl start iptables-nat.service > /dev/null 2>&1
+
 # Menambahkan IP Route
 echo -e "${GREEN}${PROGRES[10]}${NC}"
 sudo ip route add 192.168.20.0/24 via 192.168.20.1 dev eth1.10
