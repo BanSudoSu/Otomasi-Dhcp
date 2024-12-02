@@ -14,7 +14,7 @@ echo "=======================================\033[0m"
 # Variabel untuk progres
 PROGRES=("Menambahkan Repository Ban" "Melakukan update paket" "Mengonfigurasi netplan" "Menginstal DHCP server" \
          "Mengonfigurasi DHCP server" "Mengaktifkan IP Forwarding" "Mengonfigurasi Masquerade" \
-         "Menginstal iptables-persistent" "Menyimpan konfigurasi iptables"  \
+         "Menginstal iptables-persistent" "Menyimpan konfigurasi iptables" \
          "Membuat iptables NAT Service" "Menambahkan IP Route" "Instalasi Expect" "Konfigurasi Cisco")
 
 # Warna untuk output
@@ -145,13 +145,15 @@ else
     success_message "Expect sudah terinstal"
 fi
 
-# Konfigurasi Cisco
+# Konfigurasi Cisco menggunakan Expect
 echo -e "${GREEN}${PROGRES[12]}${NC}"
 CISCO_IP="192.168.234.132"
-CISCO_PORT="30013"
-expect <<EOF > /dev/null 2>&1
+CISCO_PORT="30016"
+
+expect <<EOF
+set timeout 10
 spawn telnet $CISCO_IP $CISCO_PORT
-set timeout 5
+log_user 1
 expect ">" { send "enable\r" }
 expect "#" { send "configure terminal\r" }
 expect "(config)#" { send "interface e0/1\r" }
@@ -168,6 +170,12 @@ expect "(config)#" { send "exit\r" }
 expect "#" { send "exit\r" }
 expect eof
 EOF
+
+if [ $? -eq 0 ]; then
+    success_message "Konfigurasi Cisco selesai"
+else
+    error_message "Konfigurasi Cisco gagal"
+fi
 
 # Selesai
 echo -e "${GREEN}Otomasi selesai!${NC}"
