@@ -1,50 +1,44 @@
-#!/usr/bin/expect -f
+#!/bin/bash  
 
-# Variabel konfigurasi
-set HOST "192.168.234.132"      # Ganti dengan IP Mikrotik Anda
-set PORT "30016"                # Port Telnet Mikrotik Anda
-set USER "admin"                # Username Mikrotik
-set NEW_PASS "123"              # Password baru yang akan diatur jika diminta
+# Warna untuk output  
+GREEN='\033[1;32m'  
+NC='\033[0m'  
 
-# Mulai sesi Telnet ke port yang ditentukan
-spawn telnet $HOST $PORT
+# Informasi koneksi Mikrotik  
+MIKROTIK_IP="192.168.234.132"  
+MIKROTIK_PORT="30016"  
+MIKROTIK_USER="admin"  
+DEFAULT_PASS=""  
+NEW_PASS="123"  
 
-# Tunggu prompt login
-expect "Login:"
-send "$USER\r"
+# Header  
+echo -e "${GREEN}Konfigurasi Mikrotik Dimulai...${NC}"  
 
-# Tunggu prompt password (kosong awalnya)
-expect "Password:"
-send "\r"
+expect <<EOF  
+spawn telnet $MIKROTIK_IP $MIKROTIK_PORT  
+set timeout 5  
 
-# Jika diminta mengganti password
-expect {
-    "New password:" {
-        send "$NEW_PASS\r"
-        expect "Retype new password:"
-        send "$NEW_PASS\r"
-    }
-    ">" { }
-}
+# Login  
+expect {  
+    "Login:" { send "$MIKROTIK_USER\r"; exp_continue }  
+    "Password:" { send "$DEFAULT_PASS\r" }  
+    "New Password:" { send "$NEW_PASS\r"; exp_continue }  
+    "Re-enter Password:" { send "$NEW_PASS\r" }  
+}  
 
-# Tunggu prompt Mikrotik
-send "/system console\r"
+# Tambahkan VLAN 10  
+expect ">" { send "/interface vlan add name=vlan10 vlan-id=10 interface=ether2\r" }  
 
-# Tunggu prompt Expert
-expect "expert>"
-send "/ip address add address=192.168.200.1/24 interface=ether2\r"  # Menggunakan ether2
+# Tambahkan IP Address untuk VLAN 10  
+expect ">" { send "/ip address add address=192.168.200.1/24 interface=vlan10\r" }  
 
-# Tambahkan NAT Masquerade
-expect "expert>"
-send "/ip firewall nat add chain=srcnat out-interface=ether2 action=masquerade\r"  # Menggunakan ether2
+# Tambahkan IP Route ke Ubuntu Server  
+expect ">" { send "/ip route add dst-address=192.168.20.10/24 gateway=192.168.200.1\r" }  
 
-# Tambahkan routing
-expect "expert>"
-send "/ip route add dst-address=192.168.20.10/32 gateway=192.168.200.1\r"
+# Keluar  
+expect ">" { send "quit\r" }  
+expect eof  
+EOF  
 
-# Menunggu beberapa detik dan keluar
-expect "expert>"
-send "exit\r"
-
-# Tutup sesi Telnet
-expect eof
+# Output selesai  
+echo -e "${GREEN}Konfigurasi Mikrotik selesai.${NC}"  
