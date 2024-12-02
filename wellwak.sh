@@ -148,7 +148,7 @@ fi
 # Konfigurasi Cisco menggunakan Expect
 echo -e "${GREEN}${PROGRES[12]}${NC}"
 CISCO_IP="192.168.234.132"
-CISCO_PORT="30016"
+CISCO_PORT="30013"
 
 expect <<EOF
 set timeout 10
