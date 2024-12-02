@@ -147,12 +147,12 @@ spawn telnet $CISCO_IP $CISCO_PORT
 set timeout 20
 expect ">" { send "enable\r" }
 expect "#" { send "configure terminal\r" }
-expect "(config)#" { send "interface e0/0\r" }
+expect "(config)#" { send "interface e0/1\r" }
 expect "(config-if)#" { send "switchport mode access\r" }
 expect "(config-if)#" { send "switchport access vlan 10\r" }
 expect "(config-if)#" { send "no shutdown\r" }
 expect "(config-if)#" { send "exit\r" }
-expect "(config)#" { send "interface e0/1\r" }
+expect "(config)#" { send "interface e0/0\r" }
 expect "(config-if)#" { send "switchport mode trunk\r" }
 expect "(config-if)#" { send "switchport trunk encapsulation dot1q\r" }
 expect "(config-if)#" { send "no shutdown\r" }
